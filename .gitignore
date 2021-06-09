@@ -1,0 +1,13 @@
+# Backup
+*.bak
+*~
+\#*
+*\#
+.\#*
+
+# Python virtual environments
+.matrix
+
+# Node
+node_modules
+
