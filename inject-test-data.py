@@ -34,7 +34,7 @@ def createBackupData(startDate, endDate, count):
     "ap-southeast-1",
     "eu-west-1"
   ],
-  "timestamp": "{timestamp}",
+  "timestamp": "{timestamp.isoformat()}",
   "cloud": {{
     "availability_zone": "eu-north-1",
     "resident": "persistent"
@@ -42,7 +42,7 @@ def createBackupData(startDate, endDate, count):
 }}'''
         print(f'Uploading document: {document}')
         httpConnection = client.HTTPConnection("localhost:9200")
-        httpConnection.request("POST", "/backups/backup", document, headers)
+        httpConnection.request("POST", "/backups/_doc", document, headers)
         print(f'Got HTTP response: {httpConnection.getresponse().status}')
         httpConnection.close()
     

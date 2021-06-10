@@ -25,10 +25,28 @@ python3 inject-test-data.py 2015-05-07T15:00:26.012 2021-05-07T15:00:26.123 10
 
 ## Notes
 
+
+### Creating Mapping for Index
+
+```
+curl -X PUT http://localhost:9200/backups -H "Content-Type: application/json" -d '{
+  "mappings": {
+  "properties": {
+      "timestamp": {
+        "type": "date",
+        
+        "format": "yyyy-MM-dd'"'"'T'"'"'HH:mm:ss.SSSSSS"
+      }
+    }
+  }
+}'
+```
+
+
 ### Pushing a single documents into ElasticSearch
 
 ```
-curl -X POST http://localhost:9200/backups/backup -H "Content-Type: application/json" -d '
+curl -X POST http://localhost:9200/backups/_doc -H "Content-Type: application/json" -d '
 {
   "occurence": "hourly",
   "replicas": [
@@ -36,13 +54,12 @@ curl -X POST http://localhost:9200/backups/backup -H "Content-Type: application/
     "ap-southeast-1",
     "eu-west-1"
   ],
-  "timestamp": "2017-02-23 19:54:31.012000",
+  "timestamp": "2017-02-23T19:54:31.012000",
   "cloud": {
     "availability_zone": "eu-north-1",
     "resident": "persistent"
   }
-}
-'
+}'
 ```
 
 
@@ -51,7 +68,7 @@ curl -X POST http://localhost:9200/backups/backup -H "Content-Type: application/
 Get a count of backup entries
 
 ```
-curl http://localhost:9200/backups/backup/_count
+curl http://localhost:9200/backups/_count
 ```
 
 Give the following output 
@@ -64,25 +81,33 @@ Give the following output
 ### Sorting data
 
 ```
-curl http://localhost:9200/backups/backup/_search -H "Content-Type: application/json" -d '
+curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -d '
 {
   "query": {
     "match_all": {}
   },
   "sort": {
     "_script": {
-        "type": "string",
+        "type": "number",
         "order": "asc",
         "script": {
           "lang": "painless",
-          "source": "doc['timestamp'].value"
-        } 
+          "source": "doc['"'"'timestamp'"'"'].value.getMillis()"
+        }
     }
   }
-}'
+}' | json_pp
 ```
 
-TODO: THe above doesn't work
+TODO: THe above gives this error
+
+
+### Default query
+
+```
+curl http://localhost:9200/backups/_search
+```
+
 
 
 
@@ -93,6 +118,8 @@ TODO: THe above doesn't work
 * [Painless walkthrough](https://www.elastic.co/guide/en/elasticsearch/painless/7.13/painless-walkthrough.html#painless-walkthrough)
 * [ElasticSearch docker image](https://hub.docker.com/_/elasticsearch)
 * [Multi-target syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/multi-index.html)
+* [Date format](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html)
+
 
 ### Python
 
@@ -101,7 +128,15 @@ TODO: THe above doesn't work
 * [Converting between types](https://www.digitalocean.com/community/tutorials/how-to-convert-data-types-in-python-3)
 * [Random library](https://docs.python.org/3/library/random.html)
 * [HTTP Client](https://docs.python.org/3/library/http.client.html)
-* 
+* [Output ISO format date](https://www.tutorialspoint.com/How-do-I-get-an-ISO-8601-date-in-string-format-in-Python)
+* [Removal of mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/current/removal-of-types.html)
+* [Sort contexyt](https://www.elastic.co/guide/en/elasticsearch/painless/current/painless-sort-context.html)
+
+
+### Shell
+
+* [Escaping single quotes in single quotes](https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings)
+
 
 
 
