@@ -15,10 +15,37 @@ docker run -d --name es -p 9200:9200 -p 9300:9300 elasticsearch:7.13.1
 ```
 
 
+
 ### Create Test Data
 
+Ensure that the mapping is created first for dates
+
 ```
-python3 inject-test-data.py 2015-05-07T15:00:26.012 2021-05-07T15:00:26.123 10
+curl -X PUT http://localhost:9200/backups -H "Content-Type: application/json" -d '{
+  "mappings": {
+  "properties": {
+      "timestamp": {
+        "type": "date",
+        
+        "format": "yyyy-MM-dd'"'"'T'"'"'HH:mm:ss.SSSSSS"
+      }
+    }
+  }
+}'
+```
+
+Then populate the index with a chunk of data
+
+```
+python3 inject-test-data.py 2015-05-07T15:00:26.012 2021-05-07T15:00:26.123 1000000
+```
+
+This will take several minutes to complete
+
+Check number of documents using the following
+
+```
+curl http://localhost:9200/backups/_count
 ```
 
 
@@ -41,6 +68,13 @@ curl -X PUT http://localhost:9200/backups -H "Content-Type: application/json" -d
   }
 }'
 ```
+
+Check the mapping for the index using this curl
+
+``` 
+curl http://localhost:9200/backups/_mapping | json_pp
+```
+
 
 
 ### Pushing a single documents into ElasticSearch
@@ -83,6 +117,7 @@ Give the following output
 ```
 curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -d '
 {
+  "size": 100,
   "query": {
     "match_all": {}
   },
@@ -96,10 +131,11 @@ curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -
         }
     }
   }
-}' | json_pp
+}' | json_pp | less
 ```
 
-TODO: THe above gives this error
+The above will sort the data according to the timestamp millis
+
 
 
 ### Default query
@@ -131,6 +167,7 @@ curl http://localhost:9200/backups/_search
 * [Output ISO format date](https://www.tutorialspoint.com/How-do-I-get-an-ISO-8601-date-in-string-format-in-Python)
 * [Removal of mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/current/removal-of-types.html)
 * [Sort contexyt](https://www.elastic.co/guide/en/elasticsearch/painless/current/painless-sort-context.html)
+* [Date time object](https://javadoc.io/static/org.elasticsearch/elasticsearch/7.5.0/org/elasticsearch/script/JodaCompatibleZonedDateTime.html)
 
 
 ### Shell
