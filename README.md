@@ -137,6 +137,34 @@ curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -
 The above will sort the data according to the timestamp millis
 
 
+### Output just the time in millis
+
+```
+curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -d '
+{
+  "size": 10,
+  "query": {
+    "match_all": {}
+  },
+  "script_fields": {
+    "time_in_millis": {
+        "script": {
+            "lang": "painless",
+            "source": "doc['"'"'timestamp'"'"'].value.getMillis()"
+        }
+    }
+  },
+  "sort": {
+    "time_in_millis": {
+        "order": "asc"
+    }
+  }
+}' | json_pp | less
+```
+
+TODO: Can't sort on a scripted field it would see
+
+
 
 ### Default query
 
@@ -155,6 +183,7 @@ curl http://localhost:9200/backups/_search
 * [ElasticSearch docker image](https://hub.docker.com/_/elasticsearch)
 * [Multi-target syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/multi-index.html)
 * [Date format](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html)
+* [Metric aggregation map context](https://www.elastic.co/guide/en/elasticsearch/painless/current/painless-metric-agg-map-context.html)
 
 
 ### Python
@@ -168,6 +197,10 @@ curl http://localhost:9200/backups/_search
 * [Removal of mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/current/removal-of-types.html)
 * [Sort contexyt](https://www.elastic.co/guide/en/elasticsearch/painless/current/painless-sort-context.html)
 * [Date time object](https://javadoc.io/static/org.elasticsearch/elasticsearch/7.5.0/org/elasticsearch/script/JodaCompatibleZonedDateTime.html)
+
+### Java
+
+* [Date time formatter](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)
 
 
 ### Shell
