@@ -2,6 +2,11 @@
 #
 # Inject test data into Elastic Search
 #
+# This injects millis and date.  It's possible that date in ElasticSearch is
+# actually stored as millis anyway so this might be redundant
+#
+# TODO: Find out if it is redundant!
+#
 
 import json
 import uuid
@@ -26,6 +31,8 @@ def createBackupData(startDate, endDate, count):
         timedeltaObject = timedelta(days=int(timedeltaSeconds / 86400), seconds=int(timedeltaSeconds % 86400))
         print(f'Adding timedelta: {timedeltaObject}')
         timestamp = startDate + timedeltaObject
+        # In Python 3 int covers integer numbers of any size, there is no need for 'long' anymore
+        timestampMillis = int(timestamp.timestamp()*1000)
         document = f'''
 {{
   "occurence": "hourly",
@@ -34,6 +41,7 @@ def createBackupData(startDate, endDate, count):
     "ap-southeast-1",
     "eu-west-1"
   ],
+  "millis":"{timestampMillis}",
   "timestamp": "{timestamp.isoformat()}",
   "cloud": {{
     "availability_zone": "eu-north-1",

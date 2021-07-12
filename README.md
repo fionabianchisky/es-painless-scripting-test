@@ -63,6 +63,9 @@ curl -X PUT http://localhost:9200/backups -H "Content-Type: application/json" -d
         "type": "date",
         
         "format": "yyyy-MM-dd'"'"'T'"'"'HH:mm:ss.SSSSSS"
+      },
+      "millis": {
+        "type": "long"
       }
     }
   }
@@ -173,6 +176,9 @@ curl http://localhost:9200/backups/_search
 ```
 
 
+## Important points
+
+In case of lots of scripting need to keep an eye on the [caches](https://www.elastic.co/guide/en/elasticsearch/reference/7.13/scripts-and-search-speed.html) and relevant settings. 
 
 
 ## References
@@ -184,6 +190,10 @@ curl http://localhost:9200/backups/_search
 * [Multi-target syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/multi-index.html)
 * [Date format](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html)
 * [Metric aggregation map context](https://www.elastic.co/guide/en/elasticsearch/painless/current/painless-metric-agg-map-context.html)
+* [Script caching and search speed](https://www.elastic.co/guide/en/elasticsearch/reference/7.13/scripts-and-search-speed.html)
+* [Scritped metric aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/7.13/search-aggregations-metrics-scripted-metric-aggregation.html)
+* [Deleting index](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html)
+* [Numeric types](https://www.elastic.co/guide/en/elasticsearch/reference/current/number.html)
 
 
 ### Python
@@ -197,6 +207,8 @@ curl http://localhost:9200/backups/_search
 * [Removal of mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/current/removal-of-types.html)
 * [Sort contexyt](https://www.elastic.co/guide/en/elasticsearch/painless/current/painless-sort-context.html)
 * [Date time object](https://javadoc.io/static/org.elasticsearch/elasticsearch/7.5.0/org/elasticsearch/script/JodaCompatibleZonedDateTime.html)
+* [Numbers in python](https://www.tutorialspoint.com/python3/python_numbers.htm)
+
 
 ### Java
 
