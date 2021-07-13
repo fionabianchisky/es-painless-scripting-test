@@ -158,14 +158,17 @@ curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -
     }
   },
   "sort": {
-    "time_in_millis": {
+    "timestamp": {
         "order": "asc"
     }
   }
 }' | json_pp | less
 ```
 
-TODO: Can't sort on a scripted field it would see
+It seems that the timestamp is being stored using millis anyway as the above gives identical output for the 
+sort value and `time_in_millis`.
+
+
 
 
 
