@@ -172,7 +172,7 @@ sort value and `time_in_millis`.
 ### Aggregation Script
 
 ```
-curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -d '
+curl -X POST "http://localhost:9200/backups/_search?size=0" -H "Content-Type: application/json" -d '
 {
   "size": 10,
   "query": {
@@ -195,6 +195,32 @@ curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -
   }
 }' | json_pp
 ```
+
+
+### Aggregation Script 2
+
+```
+curl -X POST "http://localhost:9200/backups/_search?size=0" -H "Content-Type: application/json" -d '
+{
+  "size": 10,
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "average_gap": {
+      "scripted_metric": {
+        "init_script": "state.timestamps = new java.util.TreeSet()",
+        "map_script": "state.timestamps.add(doc.timestamp.value.getMillis())",
+        "combine_script": "return state.timestamps.stream().sorted().collect(java.util.stream.Collectors.toList())",
+        "reduce_script": "double previous = 0 ; int count = 0 ; double total = 0; List timestampsArray = states.toArray() ; for (timestamp in timestampsArray) { if (previous == 0) { previous = timestamp} else { total += (previous - timestamp) } } return total/count "
+      }
+    }
+  }
+}' | json_pp
+```
+
+TODO: Not working yet :( 
+
 
 
 
