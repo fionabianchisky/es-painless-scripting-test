@@ -159,7 +159,7 @@ curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -
   },
   "sort": {
     "timestamp": {
-        "order": "asc"
+        "order": "desc"
     }
   }
 }' | json_pp | less
@@ -169,6 +169,32 @@ It seems that the timestamp is being stored using millis anyway as the above giv
 sort value and `time_in_millis`.
 
 
+### Aggregation Script
+
+```
+curl http://localhost:9200/backups/_search -H "Content-Type: application/json" -d '
+{
+  "size": 10,
+  "query": {
+    "match_all": {}
+  },
+  "sort": {
+    "timestamp": {
+        "order": "desc"
+    }
+  },
+  "aggs": {
+    "average_gap": {
+      "scripted_metric": {
+        "init_script": "state.gaps = [] ; state.previous = 0",
+        "map_script": "if (state.previous == 0) { state.previous = doc.timestamp } else { state.gaps.add(state.previous.value.getMillis() - doc.timestamp.value.getMillis()) }",
+        "combine_script": "int numberOfGaps = state.gaps.size() ; double gapTotal = 0.0 ; for (gap in state.gaps) {gapTotal += gap} return gapTotal/numberOfGaps",
+        "reduce_script": "return states[0]"
+      }
+    }
+  }
+}' | json_pp
+```
 
 
 
