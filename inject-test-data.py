@@ -25,8 +25,8 @@ def addWiggleFactorToTimestamp(timestamp, gapInMinutes):
     return timestamp + timedelta(minutes = wigglefactor)
 
 
-def createBackupData(startDate, endDate, gapInMinutes):
-    print(f'Creating test data between: {startDate}, {endDate} and {gapInMinutes} minutes between each')
+def createBackupData(startDate, endDate, gapInMinutes, service):
+    print(f'Creating test data between: {startDate}, {endDate} and {gapInMinutes} minutes between each, for service {service}')
     numberOfGaps = floor( (endDate - startDate).total_seconds() / (60 * gapInMinutes) )
     print(f'Number of {gapInMinutes} minute gaps is: {numberOfGaps}')
     headers = { "Content-Type": "application/json" }
@@ -42,6 +42,7 @@ def createBackupData(startDate, endDate, gapInMinutes):
         timestampMillis = int(timestamp.timestamp()*1000)
         document = f'''
 {{
+  "service":"{service}",
   "occurence": "hourly",
   "replicas": [
     "us-west-2",
@@ -67,8 +68,9 @@ if __name__ == '__main__':
     startDate = datetime.fromisoformat(sys.argv[1])
     endDate = datetime.fromisoformat(sys.argv[2])
     gapInMinutes = int(sys.argv[3])
+    service = sys.argv[4]
     
-    createBackupData(startDate, endDate, gapInMinutes)
+    createBackupData(startDate, endDate, gapInMinutes, service)
 
 
     

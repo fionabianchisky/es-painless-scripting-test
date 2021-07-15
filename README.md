@@ -37,7 +37,13 @@ curl -X PUT http://localhost:9200/backups -H "Content-Type: application/json" -d
 Then populate the index with a chunk of data
 
 ```
-python3 inject-test-data.py 2021-01-07T09:00:26.012 2021-07-15T14:00:26.123 60
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 90 jade > 01_jade.log &
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 61 igorina > 02_igorina.log &
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 45 alice > 03_alice.log &
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 60 maladicta > 04_maladicta.log &
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 55 magda > 05_magda.log &
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 85 tilda > 06_magda.log &
+python3 inject-test-data.py 2010-01-07T09:00:26.012 2021-07-15T14:00:26.123 60 polly > 07_polly.log &
 ```
 
 This will take several minutes to complete
