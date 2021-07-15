@@ -14,24 +14,31 @@ import sys
 
 from http import client
 from datetime import datetime, timedelta
-from random import Random
+from random import uniform
+from math import floor
 
 
+def addWiggleFactorToTimestamp(timestamp, gapInMinutes):
+    print(f'Adding wiggle factor to "{timestamp}" with gap of "{gapInMinutes}"')
+    wigglefactor = gapInMinutes * 0.25 * uniform(-1.0, 1.0)
+    print(f'Wiggle factor is: {wigglefactor}')
+    return timestamp + timedelta(minutes = wigglefactor)
 
-def createBackupData(startDate, endDate, count):
-    print(f'Creating test data between: {startDate}, {endDate} and {count} items')
-    timespanInSeconds = (endDate - startDate).total_seconds()
-    print(f'Timespan is: {timespanInSeconds}')
-    randomGenerator = Random()
+
+def createBackupData(startDate, endDate, gapInMinutes):
+    print(f'Creating test data between: {startDate}, {endDate} and {gapInMinutes} minutes between each')
+    numberOfGaps = floor( (endDate - startDate).total_seconds() / (60 * gapInMinutes) )
+    print(f'Number of {gapInMinutes} minute gaps is: {numberOfGaps}')
     headers = { "Content-Type": "application/json" }
-    
-    for item in range(1, count):
+
+    currentTimestamp = startDate
+    timeIncrement = timedelta(minutes=gapInMinutes)    
+        
+    for item in range(1, numberOfGaps):
         print(f'Item: {item}')
-        timedeltaSeconds = randomGenerator.random() * float(timespanInSeconds)
-        timedeltaObject = timedelta(days=int(timedeltaSeconds / 86400), seconds=int(timedeltaSeconds % 86400))
-        print(f'Adding timedelta: {timedeltaObject}')
-        timestamp = startDate + timedeltaObject
-        # In Python 3 int covers integer numbers of any size, there is no need for 'long' anymore
+        print(f'Adding timeIncrement: {timeIncrement}')
+        currentTimestamp = currentTimestamp + timeIncrement
+        timestamp = addWiggleFactorToTimestamp(currentTimestamp, gapInMinutes)
         timestampMillis = int(timestamp.timestamp()*1000)
         document = f'''
 {{
@@ -59,9 +66,9 @@ def createBackupData(startDate, endDate, count):
 if __name__ == '__main__':
     startDate = datetime.fromisoformat(sys.argv[1])
     endDate = datetime.fromisoformat(sys.argv[2])
-    count = int(sys.argv[3])
+    gapInMinutes = int(sys.argv[3])
     
-    createBackupData(startDate, endDate, count)
+    createBackupData(startDate, endDate, gapInMinutes)
 
 
     

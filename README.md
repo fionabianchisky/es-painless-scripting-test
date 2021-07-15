@@ -115,6 +115,13 @@ Give the following output
 ```
 
 
+### Default query
+
+```
+curl http://localhost:9200/backups/_search
+```
+
+
 ### Sorting data
 
 ```
@@ -200,19 +207,54 @@ curl -X POST "http://localhost:9200/backups/_search?size=0" -H "Content-Type: ap
 ### Aggregation Script 2
 
 ```
-curl -X POST "http://localhost:9200/backups/_search?size=0" -H "Content-Type: application/json" -d '
+curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: application/json" -d '
 {
+  "track_total_hits": true,
   "size": 10,
   "query": {
-    "match_all": {}
+    "range": {
+      "timestamp": {
+        "gte": "2021-05-07T09:00:26.012000",
+        "lt": "2021-05-07T09:30:26.012000"
+      }
+    }
+  },
+  "aggs": {
+    "average_gap": {
+      "scripted_metric": {
+        "init_script": "state.timestamps = []",
+        "map_script": "state.timestamps.add(doc.timestamp.value.getMillis())",
+        "combine_script": "return state.timestamps",
+        "reduce_script": "int count = 0 ; double total = 0 ; for (timestamp in states[0]) { count++ ; total+=timestamp} return count"
+      }
+    }
+  }
+}' | json_pp
+```
+
+TODO: Not working yet :( 
+
+
+### Aggregation Script 3
+
+```
+curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: application/json" -d '
+{
+  "query": {
+    "range": {
+      "timestamp": {
+        "gte": "2021-05-07T09:00:26.012000",
+        "lt": "2021-05-07T12:00:26.012000"
+      }
+    }
   },
   "aggs": {
     "average_gap": {
       "scripted_metric": {
         "init_script": "state.timestamps = new java.util.TreeSet()",
         "map_script": "state.timestamps.add(doc.timestamp.value.getMillis())",
-        "combine_script": "return state.timestamps.stream().sorted().collect(java.util.stream.Collectors.toList())",
-        "reduce_script": "double previous = 0 ; int count = 0 ; double total = 0; List timestampsArray = states.toArray() ; for (timestamp in timestampsArray) { if (previous == 0) { previous = timestamp} else { total += (previous - timestamp) } } return total/count "
+        "combine_script": "List result = state.timestamps.stream().sorted().collect(java.util.stream.Collectors.toList()); return result",
+        "reduce_script": "double previous = 0 ; int count = 0 ; double total = 0; for (timestamps in states) { for(timestamp in timestamps) {if (previous == 0) { previous = timestamp} else { total += (previous - timestamp); count++ } } } return count "
       }
     }
   }
@@ -224,11 +266,6 @@ TODO: Not working yet :(
 
 
 
-### Default query
-
-```
-curl http://localhost:9200/backups/_search
-```
 
 
 ## Important points
@@ -249,6 +286,7 @@ In case of lots of scripting need to keep an eye on the [caches](https://www.ela
 * [Scritped metric aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/7.13/search-aggregations-metrics-scripted-metric-aggregation.html)
 * [Deleting index](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html)
 * [Numeric types](https://www.elastic.co/guide/en/elasticsearch/reference/current/number.html)
+* [Aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html)
 
 
 ### Python
