@@ -37,7 +37,7 @@ curl -X PUT http://localhost:9200/backups -H "Content-Type: application/json" -d
 Then populate the index with a chunk of data
 
 ```
-python3 inject-test-data.py 2015-05-07T15:00:26.012 2021-05-07T15:00:26.123 1000000
+python3 inject-test-data.py 2021-01-07T09:00:26.012 2021-07-15T14:00:26.123 60
 ```
 
 This will take several minutes to complete
@@ -178,73 +178,16 @@ sort value and `time_in_millis`.
 
 ### Aggregation Script
 
-```
-curl -X POST "http://localhost:9200/backups/_search?size=0" -H "Content-Type: application/json" -d '
-{
-  "size": 10,
-  "query": {
-    "match_all": {}
-  },
-  "sort": {
-    "timestamp": {
-        "order": "desc"
-    }
-  },
-  "aggs": {
-    "average_gap": {
-      "scripted_metric": {
-        "init_script": "state.gaps = [] ; state.previous = 0",
-        "map_script": "if (state.previous == 0) { state.previous = doc.timestamp } else { state.gaps.add(state.previous.value.getMillis() - doc.timestamp.value.getMillis()) }",
-        "combine_script": "int numberOfGaps = state.gaps.size() ; double gapTotal = 0.0 ; for (gap in state.gaps) {gapTotal += gap} return gapTotal/numberOfGaps",
-        "reduce_script": "return states[0]"
-      }
-    }
-  }
-}' | json_pp
-```
-
-
-### Aggregation Script 2
 
 ```
 curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: application/json" -d '
 {
-  "track_total_hits": true,
-  "size": 10,
+  "size": 20,
   "query": {
     "range": {
       "timestamp": {
         "gte": "2021-05-07T09:00:26.012000",
-        "lt": "2021-05-07T09:30:26.012000"
-      }
-    }
-  },
-  "aggs": {
-    "average_gap": {
-      "scripted_metric": {
-        "init_script": "state.timestamps = []",
-        "map_script": "state.timestamps.add(doc.timestamp.value.getMillis())",
-        "combine_script": "return state.timestamps",
-        "reduce_script": "int count = 0 ; double total = 0 ; for (timestamp in states[0]) { count++ ; total+=timestamp} return count"
-      }
-    }
-  }
-}' | json_pp
-```
-
-TODO: Not working yet :( 
-
-
-### Aggregation Script 3
-
-```
-curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: application/json" -d '
-{
-  "query": {
-    "range": {
-      "timestamp": {
-        "gte": "2021-05-07T09:00:26.012000",
-        "lt": "2021-05-07T12:00:26.012000"
+        "lt": "2021-05-07T21:30:26.012000"
       }
     }
   },
@@ -254,14 +197,17 @@ curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: applicatio
         "init_script": "state.timestamps = new java.util.TreeSet()",
         "map_script": "state.timestamps.add(doc.timestamp.value.getMillis())",
         "combine_script": "List result = state.timestamps.stream().sorted().collect(java.util.stream.Collectors.toList()); return result",
-        "reduce_script": "double previous = 0 ; int count = 0 ; double total = 0; for (timestamps in states) { for(timestamp in timestamps) {if (previous == 0) { previous = timestamp} else { total += (previous - timestamp); count++ } } } return count "
+        "reduce_script": "double previous = 0 ; List timestamps = states[0] ; int count = 0; double total = 0; for(timestamp in timestamps) { if (previous == 0) { previous = timestamp} else { total += (timestamp - previous); previous = timestamp ; count++ } } return total/count"
       }
     }
   }
 }' | json_pp
 ```
 
-TODO: Not working yet :( 
+The above script appears to work.  Based on a sample of the test data it approximates to a value of 
+3600000 milliseconds, aka, 1hr.
+
+
 
 
 
