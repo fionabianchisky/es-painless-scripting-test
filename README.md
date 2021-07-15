@@ -207,6 +207,32 @@ curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: applicatio
 The above script appears to work.  Based on a sample of the test data it approximates to a value of 
 3600000 milliseconds, aka, 1hr.
 
+### Aggregation Script Simplfied
+
+```
+curl -X GET "http://localhost:9200/backups/_search" -H "Content-Type: application/json" -d '
+{
+  "size": 0
+  "query": {
+    "range": {
+      "timestamp": {
+        "gte": "2021-05-07T09:00:26.012000",
+        "lt": "2021-05-07T21:30:26.012000"
+      }
+    }
+  },
+  "aggs": {
+    "average_gap": {
+      "scripted_metric": {
+        "init_script": "state.timestamps = new ArrayList()",
+        "map_script": "state.timestamps.add(doc.timestamp.value.getMillis())",
+        "combine_script": "List gaps = new ArrayList(); long previous = 0; for (timestamp in state.timestamps) { if(previous == 0) { previous = timestamp } else { gaps.add(timestamp - previous) ; previous = timestamp  } } return gaps",
+        "reduce_script": "int count = 0; double total = 0; for(timestamp in states[0]) { total += timestamp ; count++ } return total/count"
+      }
+    }
+  }
+}' | json_pp
+```
 
 
 
